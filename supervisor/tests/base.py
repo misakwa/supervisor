@@ -210,6 +210,8 @@ class DummyOptions:
     def _exit(self, code):
         self._exitcode = code
 
+    def exit(self, code): pass
+
     def execve(self, filename, argv, environment):
         self.execve_called = True
         if self.execv_error:

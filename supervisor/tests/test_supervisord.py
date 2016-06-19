@@ -609,6 +609,16 @@ class SupervisordTests(unittest.TestCase):
         supervisord.runforever()
         self.assertNotEqual(supervisord.lastshutdownreport, 0)
 
+#    def test_shutdown_exitcode(self):
+#        options = DummyOptions()
+#        supervisord = self._makeOne(options)
+#        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+#        gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
+#        pgroup = DummyProcessGroup(gconfig)
+#        supervisord.process_groups = {'foo': pgroup}
+#        supervisord.options.mood = -1
+#        self.assertRaises(SystemExit, supervisord.runforever)
+#
     def test_getSupervisorStateDescription(self):
         from supervisor.states import getSupervisorStateDescription
         from supervisor.states import SupervisorStates

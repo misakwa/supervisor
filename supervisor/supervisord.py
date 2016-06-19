@@ -179,6 +179,7 @@ class Supervisor:
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         timeout = 1 # this cannot be fewer than the smallest TickEvent (5)
+        sig = None # last signal handled
 
         socket_map = self.options.get_socket_map()
 
@@ -203,7 +204,8 @@ class Supervisor:
                 if not self.shutdown_report():
                     # if there are no unstopped processes (we're done
                     # killing everything), it's OK to shutdown or reload
-                    raise asyncore.ExitNow
+                    break
+                    # raise asyncore.ExitNow
 
             for fd, dispatcher in combined_map.items():
                 if dispatcher.readable():
@@ -249,7 +251,7 @@ class Supervisor:
                 group.transition()
 
             self.reap()
-            self.handle_signal()
+            sig = self.handle_signal()
             self.tick()
 
             if self.options.mood < SupervisorStates.RUNNING:
@@ -257,6 +259,14 @@ class Supervisor:
 
             if self.options.test:
                 break
+
+        # Ensure that we exit with the right exitcode after signal is processed
+        # http://www.tldp.org/LDP/abs/html/exitcodes.html
+        if self.options.mood == SupervisorStates.SHUTDOWN:
+            exitcode = 1
+            if sig is not None and sig < signal.NSIG:
+                exitcode = 128 + sig
+            self.options.exit(exitcode)
 
     def tick(self, now=None):
         """ Send one or more 'tick' events when the timeslice related to
@@ -314,6 +324,7 @@ class Supervisor:
             else:
                 self.options.logger.blather(
                     'received %s indicating nothing' % signame(sig))
+        return sig
 
     def get_state(self):
         return self.options.mood
